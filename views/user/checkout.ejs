@@ -790,53 +790,96 @@ $(document).ready(function() {
             });
 
             $('#couponForm').submit(function(e) {
-                e.preventDefault();
-                var couponCode = $('#couponCode').val();
-                
-                $.ajax({
-                    url: '/apply-coupon',
-                    method: 'POST',
-                    data: { couponCode: couponCode },
-                    success: function(response) {
-                        if (response.success) {
-                            var subtotal = parseFloat($('#subtotal').text());
-                            var discountAmount = (subtotal * response.discount) / 100;
-                            var maxDiscount = response.maxDiscount;
-                            
-                            if (discountAmount > maxDiscount) {
-                                discountAmount = maxDiscount;
-                            }
-                            
-                            var total = subtotal - discountAmount;
-                            
-                            $('#couponDiscount').text(discountAmount.toFixed(2));
-                            $('#total').text(total.toFixed(2));
-                        //     alert('Coupon applied successfully!');
-                        // } else {
-                        //     alert(response.message);
-                        // }
-                        
-                        Swal.fire({
-                    icon: 'success',
-                    title: 'Coupon Applied!',
-                    text: 'Your coupon has been applied successfully!',
-                    showConfirmButton: false,
-                    timer: 2000
-                });
-            } else {
-                // SweetAlert error message
+        e.preventDefault();
+        var couponCode = $('#couponCode').val();
+        
+        $.ajax({
+            url: '/apply-coupon',
+            method: 'POST',
+            data: { couponCode: couponCode },
+            success: function(response) {
+                if (response.success) {
+                    var subtotal = parseFloat($('#subtotal').text());
+                    var discountAmount = (subtotal * response.discount) / 100;
+                    var maxDiscount = response.maxDiscount;
+                    
+                    if (discountAmount > maxDiscount) {
+                        discountAmount = maxDiscount;
+                    }
+                    
+                    var total = subtotal - discountAmount;
+                    
+                    $('#couponDiscount').text(discountAmount.toFixed(2));
+                    $('#total').text(total.toFixed(2));
+                    
+                    // Show the applied coupon section
+                    $('#appliedCouponCode').text(couponCode);
+                    $('#appliedCoupon').show();
+                    
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Coupon Applied!',
+                        text: 'Your coupon has been applied successfully!',
+                        showConfirmButton: false,
+                        timer: 2000
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: response.message
+                    });
+                }
+            },
+            error: function() {
                 Swal.fire({
                     icon: 'error',
-                    title: 'Oops...',
-                    text: response.message
+                    title: 'Error',
+                    text: 'An error occurred while applying the coupon.'
+                });
+            }
+        });
+    });
+
+    // Add event listener for Remove Coupon button
+    $('#removeCouponBtn').click(function () {
+    $.ajax({
+        url: '/remove-coupon',
+        method: 'POST',
+        success: function (response) {
+            if (response.success) {
+                $('#appliedCoupon').hide();
+                $('#couponForm').show();
+                $('#couponCode').val('');
+                $('#totalAmount').text('₹' + originalTotal); // Reset to original total
+                Swal.fire({
+                    title: 'Coupon Removed',
+                    text: response.message,
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                });
+            } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: response.message,
+                    icon: 'error',
+                    confirmButtonText: 'OK'
                 });
             }
         },
-                    error: function() {
-                        alert('An error occurred while applying the coupon.');
-                    }
-                });
+        error: function (err) {
+            Swal.fire({
+                title: 'Error',
+                text: 'An error occurred while removing the coupon.',
+                icon: 'error',
+                confirmButtonText: 'OK'
             });
+        }
+    });
+});
+
+
+  
         });
     // Form validation function
     function validateForm(form) {
@@ -1019,6 +1062,23 @@ $('#couponForm').submit(function(e) {
 
   
         </main><!-- End .main -->
+
+        <script>
+            document.getElementById('removeCouponBtn').addEventListener('click', function () {
+        
+              document.getElementById('couponDiscount').textContent = "0.00";
+              
+              const subtotal = parseFloat(document.getElementById('subtotal').textContent);
+              const newTotal = subtotal; 
+          
+              // Update the total displayed
+              document.getElementById('total').textContent = newTotal.toFixed(2);
+          
+              // Hide the applied coupon display
+              document.getElementById('appliedCoupon').style.display = 'none';
+            });
+          </script>
+          
 
      <%- include('../layout/footer') %>
     </div><!-- End .page-wrapper -->

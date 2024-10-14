@@ -15,7 +15,7 @@ const app = express();
 require('./config/passport');
 
 // MongoDB Connection
-mongoose.connect("process.env.MONGO_URI")
+mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('MongoDB Connected'))
     .catch(err => console.error('MongoDB connection error:', err));
 
@@ -71,8 +71,8 @@ app.use((err, req, res, next) => {
     res.status(500).send('Something broke!');
 });
 
-const port = process.env.PORT || 3005;
+const port = process.env.PORT || 3000;
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
-});
+}); 

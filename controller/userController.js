@@ -1285,6 +1285,7 @@ const applyCoupon = async (req, res) => {
     res.status(500).json({ success: false, message: 'An error occurred while applying the coupon.' });
   }
 };
+
 const removeCoupon = async (req, res) => {
   try {
     const userId = req.session.user_id;

@@ -76,8 +76,6 @@ router.get('/viewOrder/:orderId',auth.isLogin, UserController.renderViewOrder);
 router.post('/cancelOrderItem',auth.isLogin, UserController.cancelOrderItem);
 router.post('/requestReturn',auth.isLogin, UserController.requestReturn);
 
-// router.get('/wishlist',UserController.loadWishList);
-// router.get('/wishlist/add/:productId', UserController.addToWishlist);
 router.get('/wishlist',auth.isLogin, UserController.getWishlist);
 router.post('/wishlist/add/:productId',auth.isLogin,UserController.addToWishlist);
 router.post('/wishlist/remove/:productId',auth.isLogin,  UserController.removeFromWishlist);
