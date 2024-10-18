@@ -35,7 +35,6 @@ router.post('/profile/update',auth.isLogin, UserController.updateProfile);
 
 
 router.get('/shop',UserController.loadShopPage);
-
 router.get('/filteredProducts', UserController.getFilteredProducts);
 // In userRouter.js
 router.get('/singleproduct/:id', UserController.getProductDetails);

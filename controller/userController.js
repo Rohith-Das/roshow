@@ -623,7 +623,7 @@ const handleForgotPassword = async (req, res) => {
           },
       });
 
-      const resetUrl = `http://localhost:3000/reset-password/${resetToken}`;
+      const resetUrl = `https://roshow.shop/reset-password/${resetToken}`;
 
       const mailOptions = {
           to: user.email,

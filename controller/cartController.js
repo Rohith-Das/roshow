@@ -34,7 +34,8 @@ const addToCart = async (req, res) => {
   
       await cart.save();
   
-      res.json({ success: true });
+      res.redirect("/cart")
+
     } catch (error) {
       console.error('Error adding to cart:', error);
       res.status(500).json({ success: false, message: 'Error adding to cart' });

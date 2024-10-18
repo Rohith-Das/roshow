@@ -152,7 +152,6 @@
                         <!-- ... your existing product display code ... -->
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary">Apply Filters</button>
             </form>
 
 
@@ -551,7 +550,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const productContainer = document.getElementById('product-container');
     const searchForm = document.getElementById('search-form');
     const searchInput = document.getElementById('q');
-    const paginationLinks = document.querySelectorAll('.pagination a');
+    // const paginationLinks = document.querySelectorAll('.pagination a');
+
+    const paginationContainer = document.querySelector('.toolbox-right');
 
     // Update URL and fetch products
     function updateProductsAndURL(url) {
@@ -632,9 +633,9 @@ document.querySelectorAll('.btn-product.btn-cart').forEach(button => {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                window.location.href = '/cart';  // Redirect to cart page
+                window.location.href = '/cart';  
             } else if (data.redirectTo) {
-                window.location.href = data.redirectTo;  // Redirect to login if needed
+                window.location.href = data.redirectTo; 
             } else {
                 Swal.fire({
                     icon: 'error',
