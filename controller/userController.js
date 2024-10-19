@@ -371,10 +371,9 @@ const loadShopPage = async (req, res) => {
 };
 
 
-
 const getFilteredProducts = async (req, res) => {
   try {
-    const { brand, category, minPrice, maxPrice, shape, sort ,q} = req.query;
+    const { brand, category, minPrice, maxPrice, shape, sort, q, page = 1, limit = 12 } = req.query;
 
     const filter = { is_deleted: false };
 
@@ -413,12 +412,56 @@ const getFilteredProducts = async (req, res) => {
         sortOption = { createdAt: -1 };
     }
 
+    // Add pagination
+    const currentPage = parseInt(page);
+    const itemsPerPage = parseInt(limit);
+    const skip = (currentPage - 1) * itemsPerPage;
+
+    // Get total count for pagination
+    const totalProducts = await Product.countDocuments(filter);
+    const totalPages = Math.ceil(totalProducts / itemsPerPage);
+
     const products = await Product.find(filter)
       .sort(sortOption)
+      .skip(skip)
+      .limit(itemsPerPage)
       .populate('brand')
-      .populate('category');
+      .populate('category')
+      .populate('offer');
 
-    res.json({ products });
+    // Process products to include discount information
+    const productsWithDiscounts = products.map(product => {
+      let discountedPrice = product.price;
+      let discountPercentage = 0;
+
+      if (product.offer && product.offer.length > 0) {
+        const highestDiscountOffer = product.offer
+          .filter(offer => offer.status === 'active')
+          .reduce((max, offer) => offer.discount > max ? offer.discount : max, 0);
+
+        if (highestDiscountOffer > 0) {
+          discountPercentage = highestDiscountOffer;
+          discountedPrice = product.price - (product.price * discountPercentage) / 100;
+          discountedPrice = Math.round(discountedPrice);
+        }
+      }
+
+      return {
+        ...product.toObject(),
+        discountedPrice,
+        discountPercentage
+      };
+    });
+
+    res.json({
+      products: productsWithDiscounts,
+      pagination: {
+        currentPage,
+        totalPages,
+        totalProducts,
+        itemsPerPage
+      }
+    });
   } catch (error) {
     console.error('Error fetching filtered products:', error);
     res.status(500).json({ error: 'Internal Server Error' });
