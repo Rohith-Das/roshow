@@ -108,10 +108,6 @@ router.get('/auth/google/callback',
 
 );
 
-router.get('/auth/google', (req, res, next) => {
-    console.log('Google Auth Request');
-    next();
-}, passport.authenticate('google', { scope: ['profile', 'email'] }));
 
 
 

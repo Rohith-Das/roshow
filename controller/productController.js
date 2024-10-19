@@ -6,10 +6,6 @@ const { query } = require('express');
 const multer = require('../middleware/multer');
 
 
-
-
-
-
 const loadProducts = async (req, res) => {
     try {
       const { page = 1, limit = 10 } = req.query;

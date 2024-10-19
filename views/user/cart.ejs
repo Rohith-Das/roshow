@@ -72,16 +72,11 @@
                                 -->
                             <div>
                                      
-                                      <% if (userData){%>
-                                        <a href="/profile"><i class="icon-user"></i><%=userData.name%></a>
-                                     <% }else if (user){%>
-                                        
-                                        <a href="/profile"><i class="icon-user"></i><%=user.name%></a>
-                                    <% }else{%>
-                                        <!-- <h1>Welcome, <%= user ? user.name : 'Guest' %>!</h1> -->
-                                       
-                                    <a href="/login"><i class="icon-user"></i>Login</a>
-                                        <% }%>
+                                <% if (userData) { %>
+                                    <a href="/profile"><i class="icon-user"></i> <%= userData.name %></a> <!-- Display user name -->
+                                  <% } else { %>
+                                    <a href="/login"><i class="icon-user"></i> Login</a> <!-- Display login link if no user is logged in -->
+                                  <% } %>
                             </div>
 
                         </div><!-- End .cart-dropdown -->
@@ -187,12 +182,14 @@
                                                     <% } %>
                                                 </td>
                                                 <td class="text-center align-middle">
-                                                    <input type="number" class="form-control text-center" 
+                                                    <input type="number" 
+                                                           class="form-control text-center" 
                                                            style="width: 60px; display: inline-block;" 
                                                            value="<%= item.quantity %>" 
                                                            min="1" 
-                                                           max="5" 
-                                                           onchange="checkQuantity('<%= item.productId._id %>', this.value)">
+                                                           max="<%= Math.min(5, item.productId.stockQuantity) %>"
+                                                           data-stock="<%= item.productId.stockQuantity %>"
+                                                           onchange="checkQuantity('<%= item.productId._id %>', this.value, <%= item.productId.stockQuantity %>)">
                                                 </td>
                                                 
                                                 <td class="text-center align-middle item-total">
@@ -232,80 +229,109 @@
             
 </div>
 
-
 <script>
-  async function updateQuantity(productId, quantity) {
-
-    quantity = Number(quantity);
-    if (quantity === 5) {
-     
-        Swal.fire({
+    async function updateQuantity(productId, quantity) {
+      try {
+        quantity = parseInt(quantity);
+        if (isNaN(quantity) || quantity < 1) {
+          Swal.fire({
             icon: 'error',
-            title: 'Quantity Limit is 5',
-            text: 'You cannot have more than 5 of this item in the cart.',
-        });
-        const inputField = document.querySelector(`tr[data-product-id="${productId}"] input[type="number"]`);
-        inputField.value = 5; // Set input to max allowed quantity
-        return; // Exit the function to prevent further processing
-    }
-
-    try {
+            title: 'Invalid Quantity',
+            text: 'Please enter a valid quantity.',
+          });
+          resetQuantityInput(productId);
+          return;
+        }
+    
         const response = await fetch('/update-cart', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ productId, quantity })
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId, quantity })
         });
+        
         const data = await response.json();
-
+    
         if (data.success) {
-            const itemRow = document.querySelector(`tr[data-product-id="${productId}"]`);
-            const itemTotalCell = itemRow.querySelector('.item-total');
+          const itemRow = document.querySelector(`tr[data-product-id="${productId}"]`);
+          const itemTotalCell = itemRow.querySelector('.item-total');
+          const priceCell = itemRow.querySelector('td:nth-child(3)');
+          const discountedPrice = parseFloat(priceCell.querySelector('.discounted-price')?.textContent.replace('₹', '') || priceCell.textContent.replace('₹', ''));
+    
+          itemTotalCell.textContent = `₹${(discountedPrice * quantity).toFixed(2)}`;
+          updateCartTotals();
+        } else {
+          // Handle different error cases
+          if (data.error.includes('Maximum quantity limit is 5')) {
+            Swal.fire({
+              icon: 'error',
+              title: 'Quantity Limit Exceeded',
+              text: 'You cannot add more than 5 of this item to your cart.',
+            });
+            resetQuantityInput(productId, 5);
+          } else if (data.error.includes('available in stock')) {
+            Swal.fire({
+              icon: 'warning',
+              title: 'Stock Limit Exceeded',
+              text: data.error,
+            });
+            resetQuantityInput(productId, data.stockQuantity);
+          } else {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: data.error || 'Failed to update cart',
+            });
+            resetQuantityInput(productId);
+          }
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Failed to update cart',
+        });
+        resetQuantityInput(productId);
+      }
+    }
+    
+    function resetQuantityInput(productId, value) {
+      const inputField = document.querySelector(`tr[data-product-id="${productId}"] input[type="number"]`);
+      if (inputField) {
+        if (value !== undefined) {
+          inputField.value = value;
+        } else {
+          // Reset to previous valid value
+          const currentValue = parseInt(inputField.getAttribute('data-last-valid') || 1);
+          inputField.value = currentValue;
+        }
+      }
+    }
+    
+    function updateCartTotals() {
+        let total = 0; 
+        const itemRows = document.querySelectorAll('#cart-items tr');
+    
+        itemRows.forEach(itemRow => {
+            const quantity = Number(itemRow.querySelector('input[type="number"]').value);
             const priceCell = itemRow.querySelector('td:nth-child(3)');
             const discountedPrice = parseFloat(priceCell.querySelector('.discounted-price')?.textContent.replace('₹', '') || priceCell.textContent.replace('₹', ''));
-
-            itemTotalCell.textContent = `₹${(discountedPrice * quantity).toFixed(2)}`;
-            updateCartTotals(data.updatedCartTotal);
-        } else if (data.error === 'Quantity exceeds available stock') {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Stock Limit Exceeded',
-                text: 'Quantity exceeds available stock.',
-            });
-            const inputField = document.querySelector(`tr[data-product-id="${productId}"] input[type="number"]`);
-            inputField.value = Math.min(5, data.stockQuantity);
+    
+            total += discountedPrice * quantity;
+        });
+    
+        document.getElementById('summary-total').textContent = total.toFixed(2);
+        const itemCount = itemRows.length;
+        document.getElementById('item-count').textContent = itemCount;
+        const checkoutButton = document.getElementById('checkout-button');
+        if (itemCount === 0) {
+            document.querySelector('.card-body p').textContent = 'Your cart is empty.';
+            checkoutButton.disabled = true;
         } else {
-            console.error('Failed to update cart:', data.error);
+            checkoutButton.disabled = false;
         }
-    } catch (error) {
-        console.error('Error:', error);
     }
-}
-
-
-function updateCartTotals() {
-    let total = 0; 
-    const itemRows = document.querySelectorAll('#cart-items tr');
-
-    itemRows.forEach(itemRow => {
-        const quantity = Number(itemRow.querySelector('input[type="number"]').value);
-        const priceCell = itemRow.querySelector('td:nth-child(3)');
-        const discountedPrice = parseFloat(priceCell.querySelector('.discounted-price')?.textContent.replace('₹', '') || priceCell.textContent.replace('₹', ''));
-
-        total += discountedPrice * quantity;
-    });
-
-    document.getElementById('summary-total').textContent = total.toFixed(2);
-    const itemCount = itemRows.length;
-    document.getElementById('item-count').textContent = itemCount;
-    const checkoutButton = document.getElementById('checkout-button');
-    if (itemCount === 0) {
-        document.querySelector('.card-body p').textContent = 'Your cart is empty.';
-        checkoutButton.disabled = true;
-    } else {
-        checkoutButton.disabled = false;
-    }
-}
-
+    
     async function removeItem(productId) {
         try {
             const response = await fetch('/remove-from-cart', {
@@ -314,14 +340,14 @@ function updateCartTotals() {
                 body: JSON.stringify({ productId })
             });
             const data = await response.json();
-
+    
             if (data.success) {
                 // Remove the item row from the cart
                 const itemRow = document.querySelector(`tr[data-product-id="${productId}"]`);
                 itemRow.remove();
-
+    
                 // Update the cart totals
-                updateCartTotals(data.updatedCartTotal);
+                updateCartTotals();
             } else {
                 console.error('Failed to remove item:', data.error);
             }
@@ -329,24 +355,46 @@ function updateCartTotals() {
             console.error('Error:', error);
         }
     }
-
-    // Add event listeners for quantity inputs
-    document.querySelectorAll('#cart-items input[type="number"]').forEach(input => {
-        input.addEventListener('change', function() {
-            const productId = this.closest('tr').dataset.productId;
-            updateQuantity(productId, this.value);
+    
+    // Initialize event listeners when DOM is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add event listeners for quantity inputs
+        document.querySelectorAll('#cart-items input[type="number"]').forEach(input => {
+            // Store initial value
+            input.setAttribute('data-last-valid', input.value);
+            
+            input.addEventListener('change', function() {
+                const productId = this.closest('tr').dataset.productId;
+                const newValue = parseInt(this.value);
+                
+                if (newValue <= 0) {
+                    this.value = this.getAttribute('data-last-valid') || 1;
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Invalid Quantity',
+                        text: 'Quantity must be at least 1',
+                    });
+                    return;
+                }
+                
+                updateQuantity(productId, newValue);
+            });
+            
+            // Store last valid value before change
+            input.addEventListener('focus', function() {
+                this.setAttribute('data-last-valid', this.value);
+            });
+        });
+    
+        // Add event listeners for remove buttons
+        document.querySelectorAll('#cart-items button.btn-danger').forEach(button => {
+            button.addEventListener('click', function() {
+                const productId = this.closest('tr').dataset.productId;
+                removeItem(productId);
+            });
         });
     });
-
-    // Add event listeners for remove buttons
-    document.querySelectorAll('#cart-items button.btn-danger').forEach(button => {
-        button.addEventListener('click', function() {
-            const productId = this.closest('tr').dataset.productId;
-            removeItem(productId);
-        });
-    });
-</script>
-
+    </script>
 
 	                		
 	                	</div><!-- End .row -->
