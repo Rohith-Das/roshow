@@ -216,11 +216,11 @@
                           </a>
                       <div class="card-body">
                         <% if (addresses.length === 0) { %>
-                          <p>No addresses found. 
+                          <h3>No addresses found first create a Address then you can place the Order 
                             <a href="#" class="btn btn-secondary" data-toggle="modal" data-target="#addAddressModal">
                               Add an address
                             </a>
-                          </p>
+                        </h3>
                         <% } else { %>
                           <form id="placeOrderForm" action="/create-order" method="POST">
                             <h2 class="mb-3">Select Delivery Address</h2>
@@ -570,9 +570,10 @@ $(document).ready(function() {
         formData.append('appliedCouponCode', coupon);
         const totalAmount = parseFloat($('#totalAmount').text().replace('₹', ''));
 
+        const selectedPaymentMethod = $('input[name="paymentMethod"]:checked').val();
 
         // Check if wallet payment is selected
-        if (formData.get('paymentMethod') === 'Wallet Cash') {
+        if (selectedPaymentMethod === 'Wallet Cash') {
             const totalAmount = parseFloat($('#totalAmount').text());
             if (walletBalance < totalAmount) {
                 Swal.fire({
@@ -586,7 +587,7 @@ $(document).ready(function() {
         }
 
         // If Razorpay is selected, trigger Razorpay payment
-        if (formData.get('paymentMethod') === 'Razorpay') {
+        if (selectedPaymentMethod === 'Razorpay') {
             createRazorpayOrder();
             return;
         }
@@ -967,31 +968,39 @@ var razorpayOptions = {
         theme: {
             color: '#FFFF00'
         },  modal: {
-    ondismiss: function() {
-      handlePaymentFailure();
+        ondismiss: function() {
+            handlePaymentFailure();
+        }
     }
-  }
-    };
+};
 
-
-
-    
     var rzp = new Razorpay(razorpayOptions);
 
-    $('input[name="paymentMethod"]').change(function() {
-  if ($(this).val() === 'Razorpay') {
-    $('#rzp-button').show();
-    $('#placeOrderBtn').hide();
-    createRazorpayOrder();
-  } else if ($(this).val() === 'Wallet Cash') {
-    $('#rzp-button').hide();
-    $('#placeOrderBtn').show();
-    $('#placeOrderForm').submit();
-  } else {
-    $('#rzp-button').hide();
-    $('#placeOrderBtn').show();
-  }
-});
+//     $('input[name="paymentMethod"]').change(function() {
+//   if ($(this).val() === 'Razorpay') {
+//     $('#rzp-button').show();
+//     $('#placeOrderBtn').hide();
+//     createRazorpayOrder();
+//   } else if ($(this).val() === 'Wallet Cash') {
+//     $('#rzp-button').hide();
+//     $('#placeOrderBtn').show();
+//     $('#placeOrderForm').submit();
+//   } else {
+//     $('#rzp-button').hide();
+//     $('#placeOrderBtn').show();
+//   }
+// });
+
+$('input[name="paymentMethod"]').change(function() {
+        if ($(this).val() === 'Razorpay') {
+            $('#rzp-button').show();
+            $('#placeOrderBtn').hide();
+        } else {
+            $('#rzp-button').hide();
+            $('#placeOrderBtn').show();
+        }
+    });
+
 
 function createRazorpayOrder() {
     $.ajax({

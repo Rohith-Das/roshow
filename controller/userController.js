@@ -73,25 +73,59 @@ const loadRegister = (req, res) => {
 const authenticateUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email: email });
+    const user = await User.findOne({ email });
+
     if (!user) {
       return res.render('login', { message: "Invalid email or password" });
     }
     if (user.is_blocked) {
       return res.render('login', { message: "Your account has been blocked" });
     }
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return res.render('login', { message: "Invalid email or password" });
     }
-    req.session.user_id = user._id;
+
+    // Set session variables
+    req.session.user_id = user._id;  // Store user id
+    req.session.user = {             // Store full user data
+      name: user.name,
+      email: user.email,
+      // Add any other user info you need
+    };
+
+    // Redirect to home page
     res.redirect(`/home?id=${user._id}`);
-    
   } catch (error) {
     console.error(error);
     res.status(500).render('login', { message: "An error occurred. Please try again later." });
   }
 };
+
+
+// const authenticateUser = async (req, res) => {
+//   try {
+//     const { email, password } = req.body;
+//     const user = await User.findOne({ email: email });
+//     if (!user) {
+//       return res.render('login', { message: "Invalid email or password" });
+//     }
+//     if (user.is_blocked) {
+//       return res.render('login', { message: "Your account has been blocked" });
+//     }
+//     const isPasswordValid = await bcrypt.compare(password, user.password);
+//     if (!isPasswordValid) {
+//       return res.render('login', { message: "Invalid email or password" });
+//     }
+//     req.session.user_id = user._id;
+//     res.redirect(`/home?id=${user._id}`);
+    
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).render('login', { message: "An error occurred. Please try again later." });
+//   }
+// };
 //////////////////////////////////////////////////////////////////////////////
 // user logout
 const logoutUser = (req, res) => {
@@ -733,7 +767,6 @@ const razorpay = new Razorpay({
 });
 
 
-
 const generateOrderId = () => {
   return `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 };
@@ -907,6 +940,7 @@ const placeOrder = async (req, res) => {
       });
       return;
     }
+    
 
     // Handle Wallet Cash payment completion
     if (paymentMethod === 'Wallet Cash') {
@@ -928,8 +962,8 @@ const placeOrder = async (req, res) => {
     }
 
     // Clear cart
-    await Cart.findOneAndUpdate({ userId }, { $set: { items: [] } });
-
+    // await Cart.findOneAndUpdate({ userId }, { $set: { items: [] } });
+    await Cart.deleteOne({ userId });
     // Respond with order details
     res.json({ 
       success: true, 

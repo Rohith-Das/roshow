@@ -7,11 +7,13 @@ const UserController = require('../controller/userController');
 const cartController=require('../controller/cartController')
 const checkoutController=require('../controller/checkoutController');
 const auth=require('../middleware/userAuth')
+const nocache = require('nocache')
 
 
 router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(passport.initialize());
+router.use(nocache());
 router.use(passport.session());
 
 // In userRouter.js

@@ -645,9 +645,14 @@
                         });
                 
                         // Reattach event listeners to new Add to Cart buttons
-                        document.querySelectorAll('.btn-cart').forEach(button => {
-                            button.addEventListener('click', addToCartHandler);
-                        });
+                        document.getElementById('product-container').addEventListener('click', function(event) {
+        if (event.target.classList.contains('btn-cart')) {
+            event.preventDefault();
+            const form = event.target.closest('form');
+            const productId = form.getAttribute('action').split('/').pop();
+            addToCart(productId);
+        }
+    });
                 
                         // Add event listeners for wishlist icons
                         document.querySelectorAll('.wishlist-icon').forEach(icon => {
@@ -709,62 +714,55 @@
                             window.location.href = '/login'; 
                         });
                     }
-                
-                    // Add to cart handler
-                  // Add to cart handler
-function addToCartHandler(event) {
-    event.preventDefault();
-    const form = this.closest('form');
-    const productId = form.getAttribute('action').split('/').pop();
-
-    // Fetch to add product to the cart
-    fetch(`/add-to-cart/${productId}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Redirect to the cart page after successfully adding the product
-            Swal.fire({
-                icon: 'success',
-                title: 'Added to Cart!',
-                text: 'Product added to your cart. Redirecting to cart...',
-                timer: 1500,
-                showConfirmButton: false
-            }).then(() => {
-                window.location.href = '/cart';  // Redirect to the cart page
-            });
-        } else if (data.redirectTo) {
-            Swal.fire({
-                icon: 'info',
-                title: 'Login Required',
-                text: 'Please log in to add items to your cart.',
-                confirmButtonText: 'Go to Login'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    window.location.href = data.redirectTo;  // Redirect to login page if not logged in
-                }
-            });
-        } else {
+                    function addToCart(productId) {
+        fetch(`/add-to-cart/${productId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Added to Cart!',
+                    text: 'Product added to your cart. Redirecting to cart...',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href = '/cart';
+                });
+            } else if (data.redirectTo) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Login Required',
+                    text: 'Please log in to add items to your cart.',
+                    confirmButtonText: 'Go to Login'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = data.redirectTo;
+                    }
+                });
+            } else {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: data.message || 'An error occurred. Please try again.',
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error adding product to cart:', error);
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: data.message || 'An error occurred. Please try again.',
+                text: 'An error occurred while adding the product to your cart.',
             });
-        }
-    })
-    .catch(error => {
-        console.error('Error adding product to cart:', error);
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'An error occurred while adding the product to your cart.',
         });
-    });
-}
+    }
+
 
                 
                     // Initialize price range filter
