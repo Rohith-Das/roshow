@@ -67,13 +67,18 @@
   <ul class="menu-inner py-1">
     
     <!-- e-commerce-app menu start -->
-    <li class="menu-item active open">
+    <li class="menu-item  open">
       <a href="javascript:void(0);" class="menu-link menu-toggle">
         <i class='menu-icon tf-icons ri-shopping-bag-3-line'></i>
         <div data-i18n="eCommerce">eCommerce</div>
       </a>
       <ul class="menu-sub">
-        <li class="menu-item active">
+        <!-- <li class="menu-item">
+          <a href="/admin/dash" class="menu-link">
+            <div data-i18n="dashboard">dashboard</div>
+          </a>
+        </li> -->
+        <li class="menu-item ">
           <a href="/admin/dashboard" class="menu-link">
             <div data-i18n="Dashboard">Dashboard</div>
           </a>
@@ -112,11 +117,11 @@
 
 
         <li class="menu-item">
-          <a href="/admin/dashboard/brandList;" class="menu-link menu-toggle">
+          <a href="/admin/dashboard/orderList" class="menu-link menu-toggle">
             <div data-i18n="Order">Order</div>
           </a>
           <ul class="menu-sub">
-            <li class="menu-item">
+            <li class="menu-item active">
               <a href="/admin/dashboard/orderList" class="menu-link">
                 <div data-i18n="Order List">Order List</div>
               </a>
@@ -138,38 +143,10 @@
                 <div data-i18n="All Customers">All Customers</div>
               </a>
             </li>
-            <li class="menu-item">
-              <a href="/admin/dashboard/categoryList" class="menu-link menu-toggle">
-                <div data-i18n="Customer Details">Customer Details</div>
-              </a>
-              
-              <ul class="menu-sub">
-                <li class="menu-item">
-                  <a href="app-ecommerce-customer-details-overview.html" class="menu-link">
-                    <div data-i18n="Overview">Overview</div>
-                  </a>
-                </li>
-                <li class="menu-item">
-                  <a href="app-ecommerce-customer-details-security.html" class="menu-link">
-                    <div data-i18n="Security">Security</div>
-                  </a>
-                </li>
-                <li class="menu-item">
-                  <a href="app-ecommerce-customer-details-billing.html" class="menu-link">
-                    <div data-i18n="Address & Billing">Address & Billing</div>
-                  </a>
-                </li>
-                <li class="menu-item">
-                  <a href="app-ecommerce-customer-details-notifications.html" class="menu-link">
-                    <div data-i18n="Notifications">Notifications</div>
-                  </a>
-                </li>
-
-              </ul>
-            </li>
+           
           </ul>
         </li>
-        <li class="menu-item">
+        <li class="menu-item active">
           <a href="/admin/dashboard/offers" class="menu-link menu-toggle">
             <div data-i18n="offer">offer</div>
           </a>
@@ -207,51 +184,7 @@
            
           </ul>
         </li>
-        <li class="menu-item">
-          <a href="app-ecommerce-manage-reviews.html" class="menu-link">
-            <div data-i18n="Manage Reviews">Manage Reviews</div>
-          </a>
-        </li>
-        <li class="menu-item">
-          <a href="app-ecommerce-referral.html" class="menu-link">
-            <div data-i18n="Referrals">Referrals</div>
-          </a>
-        </li>
-        <li class="menu-item">
-          <a href="javascript:void(0);" class="menu-link menu-toggle">
-            <div data-i18n="Settings">Settings</div>
-          </a>
-          <ul class="menu-sub">
-            <li class="menu-item">
-              <a href="app-ecommerce-settings-detail.html" class="menu-link">
-                <div data-i18n="Store Details">Store Details</div>
-              </a>
-            </li>
-            <li class="menu-item">
-              <a href="app-ecommerce-settings-payments.html" class="menu-link">
-                <div data-i18n="Payments">Payments</div>
-              </a>
-            </li>
-            <li class="menu-item">
-              <a href="app-ecommerce-settings-checkout.html" class="menu-link">
-                <div data-i18n="Checkout">Checkout</div>
-              </a>
-            </li>
-            <li class="menu-item">
-              <a href="app-ecommerce-settings-shipping.html" class="menu-link">
-                <div data-i18n="Shipping & Delivery">Shipping & Delivery</div>
-              </a>
-            </li>
-            <li class="menu-item">
-              <a href="app-ecommerce-settings-locations.html" class="menu-link">
-                <div data-i18n="Locations">Locations</div>
-              </a>
-            </li>
-            <li class="menu-item">
-              <a href="app-ecommerce-settings-notifications.html" class="menu-link">
-                <div data-i18n="Notifications">Notifications</div>
-              </a>
-            </li>
+       
           </ul>
         </li>
       </ul>
@@ -262,10 +195,13 @@
 
     <!-- Components -->
     <li class="menu-header mt-7">
-      <span class="menu-header-text" data-i18n="Components">Components</span>
+      <form action="/login" method="POST">
+        <button type="submit">Logout</button>
+    </form>
     </li>
     <!-- Cards -->
     <!-- User interface -->
+   
    
   
   
@@ -298,23 +234,11 @@
 
         
         <!-- Search -->
-        <div class="navbar-nav align-items-center">
-          <div class="nav-item navbar-search-wrapper mb-0">
-            <a class="nav-item nav-link search-toggler fw-normal px-0" href="javascript:void(0);">
-              <i class="ri-search-line ri-22px scaleX-n1-rtl me-1_5"></i>
-              <span class="d-none d-md-inline-block text-muted ms-1_5">Search (Ctrl+/)</span>
-            </a>
-          </div>
-        </div>
+       
         <!-- /Search -->
     
 
-      
-      <!-- Search Small Screens -->
-      <div class="navbar-search-wrapper search-input-wrapper  d-none">
-        <input type="text" class="form-control search-input container-xxl border-0" placeholder="Search..." aria-label="Search...">
-        <i class="ri-close-fill search-toggler cursor-pointer"></i>
-      </div>
+
       
       
   
@@ -328,7 +252,7 @@
         
           <div class="container-xxl flex-grow-1 container-p-y">
             
-            <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+            <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet"> -->
             <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <div class="app-ecommerce">

@@ -15,28 +15,35 @@ const isLogin = async (req, res, next) => {
             });
         }
     } catch (error) {
-        // console.error('Error in isLogin middleware:', error);
+     
         res.status(500).send('Internal Server Error');
     }
 };
 const isLogout = async (req, res, next) => {
     try {
-        if (req.session.user_id) {
-            const user =await User.findById(req.session.user_id)
-            if(!user.is_blocked){
-                return res.redirect('/home')
-            }else{
-                return next(); 
+ 
+      if (req.session.user_id) {
+        const user = await User.findById(req.session.user_id);
+          if (user && !user.is_blocked) {
+          return res.redirect('/home'); 
+        } else {
+          req.session.destroy((err) => {
+            if (err) {
+              console.error('Error destroying session:', err);
+              return res.status(500).send('Internal Server Error');
             }
-            
-        }else{
-            return next();
+            return next(); 
+          });
         }
-        
+      } else {
+        return next(); 
+      }
     } catch (error) {
-        console.log(error.message);
+      console.error(error.message);
+      return res.status(500).send('Internal Server Error');
     }
-}
+  };
+  
 module.exports = {
     isLogin,
     isLogout

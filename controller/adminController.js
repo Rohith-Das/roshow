@@ -160,18 +160,18 @@ const adminDash = async (req, res) => {
         const topSellingCategories = await Order.aggregate([
             { $unwind: "$items" },
             { $lookup: {
-                from: "products", // Make sure this matches your Product collection name
+                from: "products",
                 localField: "items.product_id",
                 foreignField: "_id",
                 as: "productDetails"
             }},
             { $unwind: "$productDetails" },
             { $group: {
-                _id: "$productDetails.category", // Assuming category ID is stored in productDetails.category
+                _id: "$productDetails.category", 
                 totalSold: { $sum: "$items.quantity" }
             }},
             { $lookup: {
-                from: "categories", // Make sure this matches your Category collection name
+                from: "categories", 
                 localField: "_id",
                 foreignField: "_id",
                 as: "categoryDetails"
@@ -370,11 +370,20 @@ const addBrand = async (req, res) => {
 
         if (existingBrand) {
             const brands = await Brand.find();
+            const totalBrands = await Brand.countDocuments();
+            const currentPage = 1; 
+            const totalPages = Math.ceil(totalBrands / 5); 
+
             return res.render('brands', { 
                 brands, 
-                message: 'Brand already exists' 
+                message: 'Brand already exists',
+                currentPage, 
+                totalBrands, 
+                totalPages,  
+                search: '' 
             });
         }
+
         const newBrand = new Brand({ brandName, description, is_deleted: status === 'unlisted' });
         await newBrand.save();
         res.redirect('/admin/dashboard/brandList');
@@ -382,11 +391,10 @@ const addBrand = async (req, res) => {
         res.status(500).send(error.message);
     }
 };
+
 const editBrand = async (req, res) => {
     try {
         const { id, brandName, description, status } = req.body;
-
-        // Check for duplicate brand name
         const existingBrand = await Brand.findOne({ brandName, _id: { $ne: id } });
 
         if (existingBrand) {
@@ -546,49 +554,46 @@ const listCoupons = async (req, res) => {
   // Create Coupon
   const createCoupon = async (req, res) => {
     try {
-      const { code, description, discount, minAmount, maxDiscount, expiryDate } = req.body;
-      const newCoupon = new Coupon({
-        code,
-        description,
-        discount,
-        minAmount,
-        maxDiscount,
-        expiryDate
-      });
-      const currentDate = new Date();
-      
-      if (new Date(currentDate) > expiryDate) {
-        return res.status(400).json({ success: false, message: "Expire date must be in the future" });
-      }
-  
-      await newCoupon.save();
-  
-      // Fetch updated coupon list to get pagination variables
-      const totalCoupons = await Coupon.countDocuments();
-      const limit = 10;
-      const totalPages = Math.ceil(totalCoupons / limit);
-      const coupons = await Coupon.find().sort({ createdAt: -1 }).limit(limit);
-      const currentPage = 1; // Reset to page 1 or set to the appropriate page
-  
-      // Render couponList with all necessary variables
-      res.render('couponList', {
-        successMessage: 'Coupon created successfully!',
-        coupons,
-        currentPage,
-        totalPages,
-        hasNextPage: currentPage < totalPages,
-        hasPrevPage: currentPage > 1,
-        totalCoupons
-      });
-      
+        const { code, description, discount, minAmount, maxDiscount, expiryDate } = req.body;
+
+        // Validate required fields
+        if (!code || !discount || !minAmount || !expiryDate) {
+            return res.status(400).json({ success: false, message: 'All required fields must be provided.' });
+        }
+
+        const existingCoupon = await Coupon.findOne({ code });
+        if (existingCoupon) {
+            return res.status(400).json({ success: false, message: 'Coupon code already exists' });
+        }
+
+        // Expiry date validation
+        const currentDate = new Date();
+        if (new Date(expiryDate) <= currentDate) {
+            return res.status(400).json({ success: false, message: 'Expiry date must be in the future.' });
+        }
+
+        const newCoupon = new Coupon({
+            code,
+            description,
+            discount,
+            minAmount,
+            maxDiscount,
+            expiryDate
+        });
+
+        await newCoupon.save();
+
+        // Return success message
+        return res.status(201).json({ success: true, message: 'Coupon created successfully!' });
+
     } catch (error) {
-      console.error('Error creating coupon:', error);
-      res.render('coupon', { errorMessage: 'Error creating coupon. Please try again.' });
+        console.error('Error creating coupon:', error);
+        return res.status(500).json({ success: false, message: 'Error creating coupon. Please try again.' });
     }
-  };
+};
+
   
   
-  // Get Coupon by ID (for Edit Modal)
   const getCouponById = async (req, res) => {
     try {
       const coupon = await Coupon.findById(req.params.id);

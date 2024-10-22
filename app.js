@@ -1,5 +1,6 @@
 const express = require('express');
 const session = require('express-session');
+const nocache = require('nocache')
 const passport = require('passport');
 const flash = require('connect-flash');
 const path = require('path');
@@ -8,7 +9,6 @@ const dotenv = require('dotenv').config();
 const userRouter = require('./routes/userRouter');
 const adminRouter = require('./routes/adminRouter');
 const breadcrumbMiddleware = require('./middleware/breadcrumbs');
-
 const app = express();
 
 // Load Passport configuration
@@ -43,6 +43,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(flash());
 app.use(breadcrumbMiddleware);
+app.use(nocache());
 
 // Middleware to pass user data to views
 app.use((req, res, next) => {
@@ -61,6 +62,7 @@ app.set('views', [path.join(__dirname, 'views/user'), path.join(__dirname, 'view
 app.use('/assets', express.static(path.join(__dirname, './public/assets')));
 app.use('/dashboard-assets', express.static(path.join(__dirname, './public/dashboard-assets')));
 
+
 // Routes
 app.use('/', userRouter);
 app.use('/admin', adminRouter);
@@ -71,6 +73,9 @@ app.use((err, req, res, next) => {
     res.status(500).send('Something broke!');
 });
 
+app.use((req,res,next)=>{
+    res.status(404).render('404')
+})
 const port = process.env.PORT || 3002;
 
 app.listen(port, () => {

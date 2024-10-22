@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const nocache = require('nocache')
 const bodyParser = require('body-parser');
 const passport=require("passport")
 reqPassport=require("../config/passport");
@@ -7,14 +8,14 @@ const UserController = require('../controller/userController');
 const cartController=require('../controller/cartController')
 const checkoutController=require('../controller/checkoutController');
 const auth=require('../middleware/userAuth')
-const nocache = require('nocache')
+
 
 
 router.use(bodyParser.json());
 router.use(bodyParser.urlencoded({ extended: true }));
 router.use(passport.initialize());
-router.use(nocache());
 router.use(passport.session());
+router.use(nocache());
 
 // In userRouter.js
 router.get('/', UserController.loadHome);
@@ -22,7 +23,7 @@ router.get('/home', UserController.loadHome);
 router.get('/search', UserController.loadHome);
 
 
-router.get('/login', UserController.loadLogin);
+router.get('/login',auth.isLogout, UserController.loadLogin);
 router.post('/login', UserController.authenticateUser);
 router.get('/register', UserController.loadRegister);
 router.post("/register", UserController.insertUser);
