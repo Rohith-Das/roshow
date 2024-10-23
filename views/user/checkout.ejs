@@ -364,12 +364,12 @@
 
 
         <div id="priceDetails">
-            <p class="price-item">Subtotal: $<span id="subtotal"><%= totalAmount %></span></p>
-            <p class="price-item">Coupon Discount: $<span id="couponDiscount">0.00</span></p>
+            <p class="price-item">Subtotal: ₹<span id="subtotal"><%= totalAmount %></span></p>
+            <p class="price-item">Coupon Discount: ₹<span id="couponDiscount">0.00</span></p>
             <p class="price-item">Shipping Charge: <span class="highlight">Free Shipping</span></p>
-            <p class="price-item">Tax Cost: $<span class="highlight">0.00</span></p>
+            <p class="price-item">Tax Cost: ₹<span class="highlight">0.00</span></p>
             <hr>
-            <p class="price-total">Total: $<span id="total"><%= totalAmount %></span></p>
+            <p class="price-total">Total: ₹<span id="total"><%= totalAmount %></span></p>
         </div>
         
 
@@ -562,7 +562,7 @@ $(document).ready(function() {
         });
     }
     fetchWalletBalance();
-    // Handle order form submission
+    // first functio
     $('#placeOrderForm').on('submit', async function(e) {
         e.preventDefault();
         let coupon = document.getElementById("couponCode").value;
@@ -633,7 +633,7 @@ $(document).ready(function() {
         }
     }
 
-
+//second function
     $('#placeOrderForm').on('submit', async function(e) {
     e.preventDefault();
     let coupon = document.getElementById("couponCode").value;
@@ -654,7 +654,7 @@ $(document).ready(function() {
         
         Swal.fire({
             title: 'Order Placed!',
-            text: `Your order has been placed successfully. Total: $${result.orderDetails.totalAmount.toFixed(2)}`,
+            text: `Your order has been placed successfully. Total: ₹${result.orderDetails.totalAmount.toFixed(2)}`,
             icon: 'success',
             confirmButtonText: 'OK'
         }).then(() => {

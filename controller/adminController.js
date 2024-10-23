@@ -448,7 +448,7 @@ const getActiveBrands = async () => {
 
 
 
-  const loadOrderList = async (req, res) => {
+const loadOrderList = async (req, res) => {
     try {
         const { page = 1, limit = 10, search = '' } = req.query;
 

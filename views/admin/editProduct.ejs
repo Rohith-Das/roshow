@@ -325,7 +325,7 @@
 
             // Stock Quantity Validation (must be positive number)
             const stockQuantity = document.getElementById('stockQuantity');
-            if (stockQuantity.value.trim() === '' || stockQuantity.value <= 0) {
+            if (stockQuantity.value.trim() === '' || stockQuantity.value < 0) {
                 document.getElementById('stockQuantityError').textContent = 'Stock Quantity must be a positive number.';
                 isValid = false;
             }

@@ -874,6 +874,7 @@ const placeOrder = async (req, res) => {
       }
       walletAmountUsed = totalAmount;
       updatedWalletBalance = wallet.balance - walletAmountUsed;
+      paymentStatus = 'Completed';
     }
 
     const address = await Address.findById(shippingAddress);

@@ -70,7 +70,7 @@
             <div data-i18n="Dashboard">Dashboard</div>
           </a>
         </li>
-        <li class="menu-item">
+        <li class="menu-item active">
           <a href="javascript:void(0);" class="menu-link menu-toggle">
             <div data-i18n="Products">Products</div>
           </a>
@@ -113,11 +113,11 @@
                 <div data-i18n="Order List">Order List</div>
               </a>
             </li>
-            <li class="menu-item">
+            <!-- <li class="menu-item">
               <a href="app-ecommerce-order-details.html" class="menu-link">
                 <div data-i18n="Order Details">Order Details</div>
               </a>
-            </li>
+            </li> -->
           </ul>
         </li>
         <li class="menu-item">
@@ -753,7 +753,7 @@
                           <td><%= product.productName %></td>
                           <td><%= product.category.categoryName %></td>
                           <td><%= product.brand.brandName %></td>
-                          <td>$<%= product.price.toFixed(2) %></td>
+                          <td>₹<%= product.price.toFixed(2) %></td>
                           <td><%= product.stockQuantity %></td>
                           <td><%= product.is_deleted ? 'Unlisted' : 'Listed' %></td>
                           <td class="d-flex justify-content-around">
