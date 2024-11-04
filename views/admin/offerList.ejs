@@ -399,6 +399,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const editCategoryReferences = document.getElementById('editCategoryReferences');
     const editSelectedItemsContainer = document.getElementById('editSelectedItemsContainer');
     const editSelectedItems = document.getElementById('editSelectedItems');
+    let originalReferences = new Set();
+    let removedReferences = new Set();
+
 
     function handleOfferTypeChange() {
         const offerType = editOfferType.value;
@@ -428,13 +431,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         const item = document.createElement('div');
         item.classList.add('selected-item', 'd-flex', 'justify-content-between', 'align-items-center', 'mb-2', 'p-2', 'border', 'rounded');
+        item.dataset.id = option.value;
         item.innerHTML = `
             <span>${option.text}</span>
             <button type="button" class="btn btn-sm btn-danger remove-item-btn">&times;</button>
         `;
         item.querySelector('.remove-item-btn').addEventListener('click', function() {
-            option.selected = false;
-            updateSelectedItems();
+          removedReferences.add(option.value);
+          option.selected = false;
+          item.remove();
+            updateSelectedItemsVisibility()
         });
         editSelectedItems.appendChild(item);
     }
@@ -449,20 +455,19 @@ document.addEventListener('DOMContentLoaded', function() {
     // Handle product/category selection change
     editProductReferences.addEventListener('change', function(event) {
         const option = event.target.options[event.target.selectedIndex];
-        if (option.selected) {
+        if (option.selected && !removedReferences.has(option.value)) {
             addItemToSelection(option);
-        } else {
-            updateSelectedItems();
         }
+        //  else {
+        //     updateSelectedItems();
+        // }
         updateSelectedItemsVisibility();
     });
 
     editCategoryReferences.addEventListener('change', function(event) {
         const option = event.target.options[event.target.selectedIndex];
-        if (option.selected) {
+        if (option.selected && !removedReferences.has(option.value)) {
             addItemToSelection(option);
-        } else {
-            updateSelectedItems();
         }
         updateSelectedItemsVisibility();
     });
@@ -471,6 +476,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.edit-offer').forEach(button => {
         button.addEventListener('click', function() {
             const offerId = this.getAttribute('data-offer-id');
+            removedReferences.clear();
+
             fetch(`/admin/dashboard/offers/${offerId}`)
     .then(response => response.json())
     .then(offer => {
@@ -480,25 +487,33 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('editDiscount').value = offer.discount;
     document.getElementById('editExpireDate').value = offer.expireDate.split('T')[0];
     document.getElementById('editOfferType').value = offer.offerType;
-
+ // Store original references
+ originalReferences = new Set(
+                        offer.offerType === 'product' 
+                            ? offer.productIds.map(p => p._id) 
+                            : offer.categoryIds.map(c => c._id)
+                    );
     // Store existing references in a hidden field for later
-    const existingReferences = offer.offerType === 'product' ? offer.productIds : offer.categoryIds;
-    document.getElementById('existingReferences').value = JSON.stringify(existingReferences.map(ref => ref._id));
+    // const existingReferences = offer.offerType === 'product' ? offer.productIds : offer.categoryIds;
+    // document.getElementById('existingReferences').value = JSON.stringify(existingReferences.map(ref => ref._id));
 
+   
     // Reset and update product or category selection based on the offer type
+    editSelectedItems.innerHTML = '';
     Array.from(editProductReferences.options).forEach(option => option.selected = false);
-    Array.from(editCategoryReferences.options).forEach(option => option.selected = false);
+                    Array.from(editCategoryReferences.options).forEach(option => option.selected = false);
 
-    const selectElement = offer.offerType === 'product' ? editProductReferences : editCategoryReferences;
+                    const selectElement = offer.offerType === 'product' ? editProductReferences : editCategoryReferences;
+                    const references = offer.offerType === 'product' ? offer.productIds : offer.categoryIds;
 
     // Select the already assigned products or categories
-    existingReferences.forEach(ref => {
-        const option = selectElement.querySelector(`option[value="${ref._id}"]`);
-        if (option) {
-            option.selected = true;
-            addItemToSelection(option);
-        }
-    });
+     references.forEach(ref => {
+                        const option = selectElement.querySelector(`option[value="${ref._id}"]`);
+                        if (option) {
+                            option.selected = true;
+                            addItemToSelection(option);
+                        }
+                    });
 
     // Update UI to reflect selected items
     handleOfferTypeChange();
@@ -517,65 +532,52 @@ document.addEventListener('DOMContentLoaded', function() {
     });
         });
     });
+    document.getElementById('saveOfferChanges').addEventListener('click', function(e) {
+        e.preventDefault();
+        const formData = new FormData(editOfferForm);
+        const offerData = Object.fromEntries(formData.entries());
+        
+        // Include both selected and removed references in the request
+        offerData.selectedReferences = Array.from(
+            offerData.offerType === 'product' ? editProductReferences : editCategoryReferences
+        )
+            .filter(option => option.selected)
+            .map(option => option.value);
+            
+        offerData.removedReferences = Array.from(removedReferences);
 
-    // Save offer changes
-document.getElementById('saveOfferChanges').addEventListener('click', function(e) {
-    e.preventDefault();
-    const formData = new FormData(editOfferForm);
-    const offerData = Object.fromEntries(formData.entries());
-
-    const offerType = offerData.offerType;
-    const selectElement = offerType === 'product' ? editProductReferences : editCategoryReferences;
-
-    // Get newly selected references
-    const newReferences = Array.from(selectElement.selectedOptions).map(option => option.value);
-
-    // Parse the existing references stored in the hidden field
-    const existingReferences = JSON.parse(document.getElementById('existingReferences').value);
-
-    // Merge the newly selected references with the existing ones, ensuring no duplicates
-    offerData.references = [...new Set([...existingReferences, ...newReferences])];
-
-    fetch(`/admin/dashboard/offers/${offerData.offerId}/edit`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(offerData)
-    })
-    .then(response => response.json())
-    .then(result => {
-        if (result.success) {
-            Swal.fire({
-                title: 'Success!',
-                text: 'Offer updated successfully',
-                icon: 'success',
-                confirmButtonText: 'OK'
-            }).then(() => {
-                editOfferModal.hide();
-                location.reload();
-            });
-        } else {
-            Swal.fire({
-                title: 'Error!',
-                text: 'Error updating offer: ' + result.message,
-                icon: 'error',
-                confirmButtonText: 'OK'
-            });
-        }
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        Swal.fire({
-            title: 'Error!',
-            text: 'An unexpected error occurred',
-            icon: 'error',
-            confirmButtonText: 'OK'
-        });
+        fetch(`/admin/dashboard/offers/${offerData.offerId}/edit`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(offerData)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                Swal.fire({
+                    title: 'Success!',
+                    text: 'Offer updated successfully',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    editOfferModal.hide();
+                    location.reload();
+                });
+            } else {
+                Swal.fire({
+                    title: 'Error!',
+                    text: result.message,
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
+        })
+        .catch(error => console.error('Error:', error));
     });
-});
 
-  
+
       // Handle offer status toggle
       document.querySelectorAll('form[action$="/toggle-status"]').forEach(form => {
         form.addEventListener('submit', function(e) {

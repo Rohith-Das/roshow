@@ -112,11 +112,15 @@
                       <div class="card-body">
                         <h2 class="mb-4">Order Summary</h2>
 
-                        <% if (paymentFailed) { %>
-                            <div class="alert alert-warning" role="alert">
-                              Your payment was not successful. The order is currently pending. Please try the payment again or contact customer support.
+                        <% if (showPaymentButton && order.payment_type === 'Razorpay') { %>
+                            <div class="payment-pending-alert alert alert-warning my-4">
+                              <h4>Payment Pending</h4>
+                              <p>Your order has been placed but payment is pending. Please complete the payment to process your order.</p>
+                              <button id="retryPayment" class="btn btn-primary">Complete Payment</button>
                             </div>
                           <% } %>
+                          
+                      
 
                         <p>Order ID: <%= order._id %></p>
               
@@ -183,6 +187,8 @@
                     <button class="stylish-btn">CONTINUE SHOP</button>
                   </a>
               </div>
+
+
               
               <!-- <a href="/shop">
                 <button class="stylish-btn">CONTINUE SHOP</button>
@@ -193,6 +199,7 @@
               <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
               <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>
               <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+              <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
            
         </main><!-- End .main -->
 
@@ -224,6 +231,82 @@
 }
 
         </style>
+
+
+
+<script>
+    // Initialize Razorpay retry payment
+    document.getElementById('retryPayment')?.addEventListener('click', function() {
+      const options = {
+        key: '<%= razorpayKeyId %>', // Your Razorpay Key ID
+        amount: <%= order.total_amount * 100 %>, // Amount in smallest currency unit
+        currency: 'INR',
+        name: 'Your Store Name',
+        description: 'Complete Pending Payment',
+        order_id: '<%= order.razorpay_order_id %>',
+        handler: async function(response) {
+          try {
+            const verifyResponse = await fetch('/verify-payment', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                order_id: '<%= order._id %>'
+              })
+            });
+  
+            const result = await verifyResponse.json();
+            
+            if (result.success) {
+              Swal.fire({
+                title: 'Payment Successful!',
+                text: 'Your payment has been completed successfully.',
+                icon: 'success',
+                confirmButtonText: 'OK'
+              }).then(() => {
+                window.location.reload();
+              });
+            } else {
+              throw new Error(result.message || 'Payment verification failed');
+            }
+          } catch (error) {
+            console.error('Payment verification error:', error);
+            Swal.fire({
+              title: 'Payment Failed',
+              text: error.message || 'Failed to verify payment',
+              icon: 'error',
+              confirmButtonText: 'OK'
+            });
+          }
+        },
+        modal: {
+          ondismiss: function() {
+            Swal.fire({
+              title: 'Payment Cancelled',
+              text: 'You cancelled the payment. You can try again when ready.',
+              icon: 'info',
+              confirmButtonText: 'OK'
+            });
+          }
+        },
+        prefill: {
+          name: '<%= order.address_id.fullName %>',
+          email: '<%= user?.email %>',
+          contact: '<%= order.address_id.phoneNumber %>'
+        },
+        theme: {
+          color: "#3399cc"
+        }
+      };
+  
+      const rzp = new Razorpay(options);
+      rzp.open();
+    });
+  </script>
         <footer class="footer">
         	<div class="footer-middle">
 	            <div class="container">

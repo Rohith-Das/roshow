@@ -150,7 +150,6 @@ const getOfferDetails = async (req, res) => {
         res.status(500).json({ error: "Error fetching offer details" });
     }
 };
-
 const editOffer = async (req, res) => {
     try {
         const { id } = req.params;
@@ -173,11 +172,12 @@ const editOffer = async (req, res) => {
             },
             { new: true, runValidators: true }
         );
+
         const currentDate = new Date();
         if (new Date(expireDate) < currentDate) {
             return res.status(400).json({ success: false, message: "Expire date must be in the future" });
         }
-        
+
         if (!updatedOffer) {
             return res.status(404).json({ success: false, message: "Offer not found" });
         }
@@ -186,12 +186,39 @@ const editOffer = async (req, res) => {
             return Math.round(price * (1 - discount / 100));
         };
 
+        // Fetch current products associated with the offer (products or categories)
+        let currentProducts = [];
+        if (offerType === 'product') {
+            currentProducts = await Product.find({ _id: { $in: updatedOffer.productIds } });
+        } else if (offerType === 'category') {
+            currentProducts = await Product.find({ category: { $in: updatedOffer.categoryIds } });
+        }
+
+        // Find removed products or categories and revert their prices
+        let removedProducts = [];
+        if (offerType === 'product') {
+            // Find products that were part of the offer but are not in the updated references
+            removedProducts = await Product.find({ _id: { $in: updatedOffer.productIds.filter(id => !references.includes(id)) } });
+        } else if (offerType === 'category') {
+            // Find products in categories that were part of the offer but are now removed
+            removedProducts = await Product.find({ category: { $in: updatedOffer.categoryIds.filter(id => !references.includes(id)) } });
+        }
+
+        // Revert the price of removed products (from the offer)
+        for (const removedProduct of removedProducts) {
+            removedProduct.offer = null;
+            removedProduct.discountedPrice = removedProduct.price;  // Reset to original price
+            await removedProduct.save();
+        }
+
+        // Update remaining products with the new discount (for products or categories)
         let productsToUpdate = [];
         if (offerType === 'product') {
             productsToUpdate = await Product.find({ _id: { $in: references } });
         } else if (offerType === 'category') {
             productsToUpdate = await Product.find({ category: { $in: references } });
         }
+
         for (const product of productsToUpdate) {
             product.offer = updatedOffer._id;
             product.discountedPrice = calculateDiscountedPrice(product.price, updatedOffer.discount);
@@ -204,6 +231,7 @@ const editOffer = async (req, res) => {
         res.status(500).json({ success: false, message: "Error updating offer: " + error.message });
     }
 };
+
 const deleteOffer = async (req, res) => {
     try {
         const { id } = req.params;

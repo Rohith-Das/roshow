@@ -64,15 +64,15 @@ router.post('/reset-password/:token', UserController.handleResetPassword);
 
 // checkout
 router.get('/checkout',auth.isLogin,checkoutController.loadCheckout);
-router.post('/verify-payment',auth.isLogin,checkoutController.verifyPayment);
-router.post('/create-razorpay-order',auth.isLogin, checkoutController.createRazorpayOrder);
+// router.post('/verify-payment',auth.isLogin,checkoutController.verifyPayment);
+
 router.post('/checkout/add-address',auth.isLogin, checkoutController.checkoutAddAddress);
 router.post('/checkout/edit/:id',auth.isLogin,checkoutController.checkoutEditAddress);
 router.delete('/checkout/delete/:id',auth.isLogin,checkoutController.checkoutDeleteAddress);
 
 router.post('/place',auth.isLogin, UserController.placeOrder);
 router.get('/orderSummary/:orderId',auth.isLogin, UserController.orderSummary);
-
+router.post('/verify-payment', auth.isLogin, UserController.verifyPayment);
 router.get('/orders',auth.isLogin, UserController.renderOrdersPage);
 router.get('/viewOrder/:orderId',auth.isLogin, UserController.renderViewOrder);
 router.post('/cancelOrderItem',auth.isLogin, UserController.cancelOrderItem);

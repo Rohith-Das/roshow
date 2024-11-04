@@ -6,6 +6,9 @@ const orderSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
+  razorpay_order_id: {
+    type: String
+},
   order_id: {
     type: String,
     unique: true,
