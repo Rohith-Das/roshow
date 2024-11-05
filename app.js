@@ -47,7 +47,7 @@ app.use(nocache());
 
 // Middleware to pass user data to views
 app.use((req, res, next) => {
-    res.locals.user = req.user; // Makes `req.user` available to all views
+    res.locals.user = req.user; 
     next();
 });
 

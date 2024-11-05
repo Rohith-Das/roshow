@@ -1206,6 +1206,8 @@ const requestReturn = async (req, res) => {
       res.status(500).render('error', { message: 'Error processing return request' });
   }
 };
+
+
 const getWishlist = async (req, res) => {
   try {
     const userId = req.session.user_id;
@@ -1373,7 +1375,7 @@ const getWalletBalance = async (req, res) => {
     if (!wallet) {
       return res.status(404).json({ error: 'Wallet not found' });
     }
-    res.json({ balance: wallet.balance });
+    res.json({ balance: wallet.balance || 0 });
   } catch (error) {
     console.error('Error fetching wallet balance:', error);
     res.status(500).json({ error: 'Error fetching wallet balance' });

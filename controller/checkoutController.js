@@ -156,69 +156,102 @@ const loadCheckout = async (req, res) => {
   //   }
   // };
   
-   
   const checkoutAddAddress = async (req, res) => {
     try {
-      const userId = req.session.user_id;
-      if (!userId) {
-        return res.json({ success: false, message: 'User not logged in' });
-      }
-  
-      const newAddress = new Address({
-        user: userId,
-        fullName: req.body.fullName,
-        addressLine1: req.body.addressLine1,
-        addressLine2: req.body.addressLine2,
-        city: req.body.city,
-        state: req.body.state,
-        postalCode: req.body.postalCode,
-        country: req.body.country,
-        phoneNumber: req.body.phoneNumber
-      });
-  
-      await newAddress.save();
-  
-      // Fetch all updated addresses after saving the new one
-      const addresses = await Address.find({ user: userId });
-  
-      res.json({ success: true, addresses });
+        const userId = req.session.user_id;
+        if (!userId) {
+            return res.json({ success: false, message: 'User not logged in' });
+        }
+
+        // Validate required fields
+        const requiredFields = ['fullName', 'addressLine1', 'city', 'state', 'postalCode', 'country', 'phoneNumber'];
+        for (const field of requiredFields) {
+            if (!req.body[field]) {
+                return res.json({ success: false, message: `${field} is required` });
+            }
+        }
+
+        // Create new address
+        const newAddress = new Address({
+            user: userId,
+            fullName: req.body.fullName,
+            addressLine1: req.body.addressLine1,
+            addressLine2: req.body.addressLine2 || '',
+            city: req.body.city,
+            state: req.body.state,
+            postalCode: req.body.postalCode,
+            country: req.body.country,
+            phoneNumber: req.body.phoneNumber
+        });
+
+        await newAddress.save();
+
+        // Get updated addresses
+        const addresses = await Address.find({ user: userId });
+
+        res.json({ 
+            success: true, 
+            message: 'Address added successfully',
+            addresses: addresses 
+        });
+
     } catch (error) {
-      console.error(error);
-      res.json({ success: false, message: 'An error occurred while adding the address' });
+        console.error('Add address error:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: 'An error occurred while adding the address' 
+        });
     }
-  };
-  
-  const checkoutEditAddress = async (req, res) => {
-    try {
+};
+const checkoutEditAddress = async (req, res) => {
+  try {
       const userId = req.session.user_id;
       if (!userId) {
-        return res.json({ success: false, message: 'User not logged in' });
+          return res.status(401).json({ success: false, message: 'User not logged in' });
       }
-  
+
       const addressId = req.params.id;
+      
+      const existingAddress = await Address.findOne({ _id: addressId, user: userId });
+      if (!existingAddress) {
+          return res.status(404).json({ success: false, message: 'Address not found' });
+      }
+      const requiredFields = ['fullName', 'addressLine1', 'city', 'state', 'postalCode', 'country', 'phoneNumber'];
+      for (const field of requiredFields) {
+          if (!req.body[field]) {
+              return res.status(400).json({ success: false, message: `${field} is required` });
+          }
+      }
+
       const updatedAddress = {
-        fullName: req.body.fullName,
-        addressLine1: req.body.addressLine1,
-        addressLine2: req.body.addressLine2,
-        city: req.body.city,
-        state: req.body.state,
-        postalCode: req.body.postalCode,
-        country: req.body.country,
-        phoneNumber: req.body.phoneNumber
+          fullName: req.body.fullName,
+          addressLine1: req.body.addressLine1,
+          addressLine2: req.body.addressLine2 || '',
+          city: req.body.city,
+          state: req.body.state,
+          postalCode: req.body.postalCode,
+          country: req.body.country,
+          phoneNumber: req.body.phoneNumber
       };
-  
-      await Address.findByIdAndUpdate(addressId, updatedAddress);
-  
-      // Fetch all updated addresses after saving the changes
+
+      await Address.findByIdAndUpdate(addressId, updatedAddress, { new: true });
+
       const addresses = await Address.find({ user: userId });
-  
-      res.json({ success: true, addresses });
-    } catch (error) {
-      console.error(error);
-      res.json({ success: false, message: 'An error occurred while updating the address' });
-    }
-  };
-  
+
+      res.json({ 
+          success: true, 
+          message: 'Address updated successfully',
+          addresses: addresses 
+      });
+
+  } catch (error) {
+      console.error('Edit address error:', error);
+      res.status(500).json({ 
+          success: false, 
+          message: 'An error occurred while updating the address' 
+      });
+  }
+};
   const checkoutDeleteAddress = async (req, res) => {
     try {
       const userId = req.session.user_id;
