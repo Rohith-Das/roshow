@@ -50,29 +50,24 @@ const addToCart = async (req, res) => {
       if (!userId) {
         return res.redirect('/login');
       }
-  
-      // Find the cart for the user, populating necessary fields
+
       let cart = await Cart.findOne({ userId }).populate({
         path: 'items.productId',
         populate: { path: 'offer' }
       });
   
-      // If cart is not found, create a new empty cart and save it
       if (!cart) {
         const newCart = new Cart({
           userId: userId,
-          items: []  // Initialize with an empty items array
+          items: []  
         });
         await newCart.save();
-        // Set the cart to the newly created empty cart
         cart = newCart;
         return res.render('cart', { cart, userData: user, message: 'Cart is empty' });
       }
   
-      // Filter out unlisted products (is_deleted: true)
       cart.items = cart.items.filter(item => !item.productId.is_deleted);
   
-      // Calculate discounted prices for each item in the cart
       cart.items.forEach(item => {
         const product = item.productId;
         let discountPercentage = 0;
@@ -88,11 +83,10 @@ const addToCart = async (req, res) => {
             discountedPrice = Math.round(product.price * (1 - discountPercentage / 100));
           }
         }
-  
+
         item.discountedPrice = discountedPrice;
       });
   
-      // Render the cart view, passing the filtered cart items
       res.render('cart', { cart, userData: user, message: cart.items.length ? null : 'Cart is empty' });
   
     } catch (error) {

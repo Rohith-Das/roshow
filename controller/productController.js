@@ -151,8 +151,8 @@ const editProduct = async (req, res) => {
             existingImages
         } = req.body;
 
-        console.log('Received form data:', req.body);
-        console.log('Received files:', req.files);
+        // console.log('Received form data:', req.body);
+        // console.log('Received files:', req.files);
 
         const product = await Product.findById(productId);
 

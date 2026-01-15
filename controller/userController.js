@@ -208,7 +208,13 @@ const insertUser = async (req, res) => {
         otp,
         userData: { name, phone, email, password: spassword },
       };
-      console.log(otp), await sendOTPEmail(email, otp);
+      console.log(otp);
+      try {
+        await sendOTPEmail(email, otp);
+      } catch (emailError) {
+        console.log("Email sending failed (development mode):", emailError.message);
+        // Continue anyway - email not critical for development
+      }
 
       res.redirect(`/verify-otp?email=${email}`);
 
@@ -267,7 +273,11 @@ const resentOTP = async (req, res) => {
   
       const newOTP = generateOTP();
       otpStore[email].otp = newOTP;
-      await sendOTPEmail(email, newOTP);
+      try {
+        await sendOTPEmail(email, newOTP);
+      } catch (emailError) {
+        console.log("Email resend failed (development mode):", emailError.message);
+      }
       console.log(`Resent OTP for ${email}: ${newOTP}`);
   
       res.status(200).send("OTP resent successfully.");
@@ -766,6 +776,7 @@ const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET
 });
+
 const generateOrderId = () => {
   return `ORD-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 };

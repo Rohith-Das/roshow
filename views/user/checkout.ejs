@@ -883,7 +883,7 @@ $('#placeOrderForm').on('submit', async function(e) {
         form.find('.invalid-feedback').remove();
         form.find('.is-invalid').removeClass('is-invalid');
 
-        // Required fields validation
+   
         form.find('input[required]').each(function() {
             if ($(this).val().trim() === '') {
                 isValid = false;
@@ -892,7 +892,7 @@ $('#placeOrderForm').on('submit', async function(e) {
             }
         });
 
-        // Specific field validations
+       
         const validations = {
             fullName: /^[A-Za-z\s]+$/,
             phoneNumber: /^\d{10}$/,

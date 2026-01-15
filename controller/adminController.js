@@ -741,6 +741,7 @@ const getSalesReport = async (req, res) => {
         res.status(500).json({ message: 'Failed to generate sales report.' });
     }
 };
+
 const downloadSalesReport = async (req, res) => {
     try {
         const { filter, startDate, endDate, format } = req.query;
